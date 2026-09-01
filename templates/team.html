@@ -1,28 +1,45 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div style="max-width: 900px; margin: 40px auto; padding: 20px;">
+<div style="max-width: 900px; margin: 40px auto; padding: 20px; text-align: center;">
     <h2>Нашият Екип</h2>
-    <p style="color: #ccc; margin-bottom: 30px;">Ето служителите и ръководството на Nova Transit EAD.</p>
+    <p style="color: #ccc; margin-bottom: 40px;">Ето ръководството и екипа на Nova Transit EAD.</p>
 
-    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
-        {% for member in team_members %}
-        <div style="background: #1e1e1e; padding: 20px; border-radius: 8px; width: 220px; border: 1px solid #333;">
-            <h3 style="color: #fff; margin-bottom: 10px;">{{ member.username }}</h3>
-            
-            {% if member.username == 's1llyy' %}
-                <span class="dev-tag" style="display: inline-block; margin: 0;">[Web Developer]</span>
-            {% elif member.role == 'Администратор' %}
-                <span style="color: #ffaa00; font-weight: bold;">(Администратор)</span>
-            {% elif member.role == 'Диспечер' %}
-                <span style="color: #00aaff; font-weight: bold;">(Диспечер)</span>
-            {% elif member.role == 'Шофьор' %}
-                <span style="color: #00e676; font-weight: bold;">(Шофьор)</span>
-            {% endif %}
+    {% if dev_user %}
+    <div style="margin-bottom: 40px;">
+        <h3 style="color: #ff3333; margin-bottom: 15px; font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">Собственик & Разработчик</h3>
+        <div style="display: flex; justify-content: center;">
+            <div style="background: #1e1e1e; padding: 25px; border-radius: 10px; width: 250px; border: 2px solid #ff3333; box-shadow: 0 0 15px rgba(255, 51, 51, 0.2);">
+                <h3 style="color: #fff; margin-bottom: 10px; font-size: 22px;">{{ dev_user.username }}</h3>
+                <span class="dev-tag" style="display: inline-block; margin: 0; color: #ff3333; font-weight: bold; font-size: 15px;">[Web Developer]</span>
+            </div>
         </div>
-        {% else %}
-        <p style="color: #888;">Все още няма вписани членове на екипа.</p>
-        {% endfor %}
+    </div>
+    {% endif %}
+
+    <hr style="border: 0; height: 1px; background: #333; margin: 40px 0;">
+
+    <div>
+        <h3 style="color: #aaa; margin-bottom: 20px; font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">Администрация и Диспечери</h3>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+            {% for member in other_members %}
+            <div style="background: #1e1e1e; padding: 20px; border-radius: 8px; width: 220px; border: 1px solid #333;">
+                <h3 style="color: #fff; margin-bottom: 10px;">{{ member.username }}</h3>
+                
+                {% if member.role == 'Администратор' %}
+                    <span style="color: #ffaa00; font-weight: bold;">(Администратор)</span>
+                {% elif member.role == 'Диспечер' %}
+                    <span style="color: #00aaff; font-weight: bold;">(Диспечер)</span>
+                {% elif member.role == 'Шофьор' %}
+                    <span style="color: #00e676; font-weight: bold;">(Шофьор)</span>
+                {% else %}
+                    <span style="color: #888;">({{ member.role }})</span>
+                {% endif %}
+            </div>
+            {% else %}
+            <p style="color: #888;">Все още няма други вписани членове на екипа.</p>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}
