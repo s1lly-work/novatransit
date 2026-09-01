@@ -1,23 +1,40 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div style="max-width: 900px; margin: 40px auto; padding: 20px;">
+<div style="max-width: 950px; margin: 40px auto; padding: 20px;">
     <h2>Административен панел</h2>
 
     <h3 style="margin-top: 30px;">Кандидатури</h3>
     <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
         <tr style="background: #1e1e1e;">
             <th style="padding: 10px; border: 1px solid #333;">Име</th>
+            <th style="padding: 10px; border: 1px solid #333;">Roblox</th>
             <th style="padding: 10px; border: 1px solid #333;">Опит</th>
+            <th style="padding: 10px; border: 1px solid #333;">Статус</th>
+            <th style="padding: 10px; border: 1px solid #333;">Действие</th>
         </tr>
         {% for app in applications %}
         <tr>
             <td style="padding: 10px; border: 1px solid #333;">{{ app.username }}</td>
+            <td style="padding: 10px; border: 1px solid #333;">{{ app.roblox_username }}</td>
             <td style="padding: 10px; border: 1px solid #333;">{{ app.experience }}</td>
+            <td style="padding: 10px; border: 1px solid #333;">
+                <span style="font-weight: bold; color: {% if app.status == 'Approved' %}#2e7d32{% elif app.status == 'Rejected' %}#c62828{% else %}#ffaa00{% endif %};">
+                    {{ app.status }}
+                </span>
+            </td>
+            <td style="padding: 10px; border: 1px solid #333;">
+                {% if app.status == 'Pending' %}
+                    <a href="{{ url_for('application_action', app_id=app.id, action='approve') }}" style="color: #00e676; margin-right: 10px; font-weight: bold;">Одобри</a>
+                    <a href="{{ url_for('application_action', app_id=app.id, action='reject') }}" style="color: #ff3333; font-weight: bold;">Отхвърли</a>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
         </tr>
         {% else %}
         <tr>
-            <td colspan="2" style="padding: 10px; border: 1px solid #333;">Няма намерени кандидатури.</td>
+            <td colspan="5" style="padding: 10px; border: 1px solid #333;">Няма намерени кандидатури.</td>
         </tr>
         {% endfor %}
     </table>
@@ -26,8 +43,8 @@
     <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
         <tr style="background: #1e1e1e;">
             <th style="padding: 10px; border: 1px solid #333;">Потребител</th>
-            <th style="padding: 10px; border: 1px solid #333;">Роля</th>
-            <th style="padding: 10px; border: 1px solid #333;">Действие</th>
+            <th style="padding: 10px; border: 1px solid #333;">Текуща Роля</th>
+            <th style="padding: 10px; border: 1px solid #333;">Промяна на роля</th>
             <th style="padding: 10px; border: 1px solid #333;">Смяна на парола</th>
         </tr>
         {% for u in users %}
@@ -35,20 +52,21 @@
             <td style="padding: 10px; border: 1px solid #333;">{{ u.username }}</td>
             <td style="padding: 10px; border: 1px solid #333;">
                 {% if u.username == 's1llyy' %}
-                    <span style="color: #ff3333; font-weight: bold;">Главен Администратор</span>
-                {% elif u.is_admin %}
-                    <span style="color: #ffaa00; font-weight: bold;">Администратор</span>
+                    <span class="dev-tag">[Web Developer]</span>
                 {% else %}
-                    Потребител
+                    <span style="font-weight: bold; color: {% if u.role == 'Администратор' %}#ffaa00{% elif u.role == 'Диспечер' %}#00aaff{% elif u.role == 'Шофьор' %}#00e676{% else %}#888{% endif %};">
+                        {{ u.role or 'Гост' }}
+                    </span>
                 {% endif %}
             </td>
             <td style="padding: 10px; border: 1px solid #333;">
                 {% if u.username == 's1llyy' %}
                     -
                 {% else %}
-                    <a href="{{ url_for('toggle_admin', user_id=u.id) }}" style="color: #00aaff;">
-                        {% if u.is_admin %}Премахни админ{% else %}Направи админ{% endif %}
-                    </a>
+                    <a href="{{ url_for('set_role', user_id=u.id, new_role='Шофьор') }}" style="color: #00e676; margin-right: 5px;">Шофьор</a> |
+                    <a href="{{ url_for('set_role', user_id=u.id, new_role='Диспечер') }}" style="color: #00aaff; margin-right: 5px;">Диспечер</a> |
+                    <a href="{{ url_for('set_role', user_id=u.id, new_role='Администратор') }}" style="color: #ffaa00; margin-right: 5px;">Админ</a> |
+                    <a href="{{ url_for('set_role', user_id=u.id, new_role='Гост') }}" style="color: #888;">Гост</a>
                 {% endif %}
             </td>
             <td style="padding: 10px; border: 1px solid #333;">
