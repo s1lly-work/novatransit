@@ -32,6 +32,9 @@ class Application(db.Model):
     experience = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default='Pending')
 
+with app.app_context():
+    db.create_all()
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
