@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo" alt="Nova Transit Logo">
+    <div class="hero-text">
+        <h1>Добре дошли в Nova Transit EAD</h1>
+        <p>Автобусна фирма в OMSI 2</p>
+    </div>
+    <a href="{{ url_for('gallery') }}" class="btn-learn">Научете повече</a>
+</div>
+
+<div class="social-links">
+    <p>Свържете се с нас</p>
+    <a href="https://www.tiktok.com/@novatransit" target="_blank">TikTok</a>
+    <a href="https://discord.gg/NXPgJntVBY" target="_blank">Discord</a>
+</div>
+{% endblock %}
