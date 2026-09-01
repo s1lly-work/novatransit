@@ -1,18 +1,18 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
 {% block content %}
-{% if has_pending_application %}
-<div class="form-container">
-    <h2>Вече имате активна кандидатура!</h2>
-    <p>Моля, изчакайте тя да бъде прегледана, преди да подавате нова.</p>
-</div>
-{% else %}
-<div class="form-container">
-    <h2>Заявете вашата кандидатура за работа</h2>
+<div style="max-width: 500px; margin: 50px auto; background: #1e1e1e; padding: 30px; border-radius: 8px; border: 1px solid #333;">
+    <h2>Кандидатура за Шофьор</h2>
     <form method="POST">
-        <input type="text" name="name" placeholder="Име и години" required>
-        <textarea name="experience" placeholder="Опит в OMSI 2" rows="5" required></textarea>
-        <button type="submit">Изпрати</button>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px;">Възраст:</label>
+            <input type="number" name="age" required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: white;">
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px;">Опит (опишете накратко):</label>
+            <textarea name="experience" required style="width: 100%; height: 100px; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #2a2a2a; color: white;"></textarea>
+        </div>
+        <button type="submit" style="width: 100%; padding: 10px; background: #00e676; border: none; font-weight: bold; cursor: pointer; border-radius: 4px;">Изпрати кандидатура</button>
     </form>
 </div>
-{% endif %}
 {% endblock %}
