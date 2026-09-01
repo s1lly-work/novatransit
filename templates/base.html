@@ -21,10 +21,14 @@
             {% if current_user.is_authenticated %}
                 <span>
                     {{ current_user.username }}
-                    {% if current_user.username == 's1llyy' %}
-                        <span class="dev-tag">[Web Developer]</span>
-                    {% elif current_user.is_admin %}
-                        <span class="admin-tag">(Admin)</span>
+                    {% if current_user.username == 's1llyy' or current_user.role == 'Web Developer' %}
+                        <span class="dev-tag" style="color: #ff3333; font-weight: bold;">[Web Developer]</span>
+                    {% elif current_user.role == 'Администратор' or current_user.is_admin %}
+                        <span class="admin-tag" style="color: #ffaa00; font-weight: bold;">(Admin)</span>
+                    {% elif current_user.role == 'Диспечер' %}
+                        <span style="color: #00aaff; font-weight: bold;">(Диспечер)</span>
+                    {% elif current_user.role == 'Шофьор' %}
+                        <span style="color: #00e676; font-weight: bold;">(Шофьор)</span>
                     {% endif %}
                 </span>
                 <a href="{{ url_for('logout') }}">Изход</a>
