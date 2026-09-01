@@ -12,7 +12,7 @@
         </tr>
         {% for app in applications %}
         <tr>
-            <td style="padding: 10px; border: 1px solid #333;">{{ app.name }}</td>
+            <td style="padding: 10px; border: 1px solid #333;">{{ app.username }}</td>
             <td style="padding: 10px; border: 1px solid #333;">{{ app.experience }}</td>
         </tr>
         {% else %}
@@ -33,19 +33,21 @@
         <tr>
             <td style="padding: 10px; border: 1px solid #333;">{{ u.username }}</td>
             <td style="padding: 10px; border: 1px solid #333;">
-                {% if u.is_admin %}
-                    <span style="color: #ff4d4d; font-weight: bold;">Администратор</span>
+                {% if u.username == 's1llyy' %}
+                    <span style="color: #ff4d4d; font-weight: bold;">Главен Администратор</span>
+                {% elif u.is_admin %}
+                    <span style="color: #ffaa00; font-weight: bold;">Администратор</span>
                 {% else %}
                     Потребител
                 {% endif %}
             </td>
             <td style="padding: 10px; border: 1px solid #333;">
-                {% if u.id != current_user.id %}
+                {% if u.username == 's1llyy' %}
+                    -
+                {% else %}
                     <a href="{{ url_for('toggle_admin', user_id=u.id) }}" style="color: #00aaff;">
                         {% if u.is_admin %}Премахни админ{% else %}Направи админ{% endif %}
                     </a>
-                {% else %}
-                    -
                 {% endif %}
             </td>
         </tr>
