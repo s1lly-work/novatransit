@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
+{% if has_pending_application %}
+<div class="form-container">
+    <h2>Вече имате активна кандидатура!</h2>
+    <p>Моля, изчакайте тя да бъде прегледана, преди да подавате нова.</p>
+</div>
+{% else %}
 <div class="form-container">
     <h2>Заявете вашата кандидатура за работа</h2>
     <form method="POST">
@@ -8,4 +14,5 @@
         <button type="submit">Изпрати</button>
     </form>
 </div>
+{% endif %}
 {% endblock %}

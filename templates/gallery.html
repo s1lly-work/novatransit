@@ -2,7 +2,6 @@
 {% block content %}
 <h2>Снимки на нашия транспорт</h2>
 
-<!-- Избор на модел чрез Python връзки -->
 <div class="bus-filters">
     <a href="{{ url_for('gallery', model='all') }}" class="filter-btn {% if selected_model == 'all' %}active{% endif %}">Всички</a>
     <a href="{{ url_for('gallery', model='u12-iii') }}" class="filter-btn {% if selected_model == 'u12-iii' %}active{% endif %}">Urbino 12 III</a>
@@ -10,11 +9,10 @@
     <a href="{{ url_for('gallery', model='u18-iii') }}" class="filter-btn {% if selected_model == 'u18-iii' %}active{% endif %}">Urbino 18 III</a>
 </div>
 
-<!-- Галерия, визуализирана от Python -->
 <div class="gallery-container">
     {% for bus in buses %}
     <div class="bus-card">
-        <img src="{{ url_for('static', filename='images/' + bus.image) }}" alt="{{ bus.title }}">
+        <img src="{{ url_for('static', filename=bus.image) }}" alt="{{ bus.title }}">
         <h3>{{ bus.title }}</h3>
     </div>
     {% endfor %}
