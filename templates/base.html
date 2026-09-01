@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Nova Transit EAD</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <nav>
@@ -19,7 +19,9 @@
             {% if current_user.is_authenticated %}
                 <span>
                     {{ current_user.username }}
-                    {% if current_user.is_admin %}
+                    {% if current_user.username == 's1llyy' %}
+                        <span class="admin-tag" style="color: #ffaa00; font-weight: bold;">(Главен Admin)</span>
+                    {% elif current_user.is_admin %}
                         <span class="admin-tag">(Admin)</span>
                     {% endif %}
                 </span>
