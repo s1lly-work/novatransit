@@ -1,27 +1,48 @@
-<nav>
-    <div>
-        <a href="{{ url_for('home') }}">Начало</a>
-        <a href="{{ url_for('gallery') }}">Галерия</a>
-        <a href="{{ url_for('team') }}">Екип</a>
-        <a href="{{ url_for('apply') }}">Кандидатствай</a>
-        {% if current_user.is_authenticated and current_user.is_admin %}
-            <a href="{{ url_for('admin_panel') }}" style="color: #ff4d4d; font-weight: bold;">Админ Панел</a>
-        {% endif %}
-    </div>
-    <div>
-        {% if current_user.is_authenticated %}
-            <span>
-                {{ current_user.username }}
-                {% if current_user.username == 's1llyy' %}
-                    <span class="dev-tag">[Web Developer]</span>
-                {% elif current_user.is_admin %}
-                    <span class="admin-tag">(Admin)</span>
-                {% endif %}
-            </span>
-            <a href="{{ url_for('logout') }}">Изход</a>
-        {% else %}
-            <a href="{{ url_for('login') }}">Вход</a>
-            <a href="{{ url_for('register') }}">Регистрация</a>
-        {% endif %}
-    </div>
-</nav>
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova Transit EAD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <div>
+            <a href="{{ url_for('home') }}">Начало</a>
+            <a href="{{ url_for('gallery') }}">Галерия</a>
+            <a href="{{ url_for('team') }}">Екип</a>
+            <a href="{{ url_for('apply') }}">Кандидатствай</a>
+            {% if current_user.is_authenticated and current_user.is_admin %}
+                <a href="{{ url_for('admin_panel') }}" style="color: #ff4d4d; font-weight: bold;">Админ Панел</a>
+            {% endif %}
+        </div>
+        <div>
+            {% if current_user.is_authenticated %}
+                <span>
+                    {{ current_user.username }}
+                    {% if current_user.username == 's1llyy' %}
+                        <span class="dev-tag">[Web Developer]</span>
+                    {% elif current_user.is_admin %}
+                        <span class="admin-tag">(Admin)</span>
+                    {% endif %}
+                </span>
+                <a href="{{ url_for('logout') }}">Изход</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Вход</a>
+                <a href="{{ url_for('register') }}">Регистрация</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</body>
+</html>
