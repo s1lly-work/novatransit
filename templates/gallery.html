@@ -1,20 +1,55 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
 {% block content %}
-<h2>Снимки на нашия транспорт</h2>
+<div style="max-width: 1200px; margin: 40px auto; padding: 20px; text-align: center;">
+    <h2>Галерия</h2>
+    <p style="color: #ccc; margin-bottom: 30px;">Автобусите на Nova Transit EAD</p>
 
-<div class="bus-filters">
-    <a href="{{ url_for('gallery', model='all') }}" class="filter-btn {% if selected_model == 'all' %}active{% endif %}">Всички</a>
-    <a href="{{ url_for('gallery', model='u12-iii') }}" class="filter-btn {% if selected_model == 'u12-iii' %}active{% endif %}">Urbino 12 III</a>
-    <a href="{{ url_for('gallery', model='u12-iv') }}" class="filter-btn {% if selected_model == 'u12-iv' %}active{% endif %}">Urbino 12 IV</a>
-    <a href="{{ url_for('gallery', model='u18-iii') }}" class="filter-btn {% if selected_model == 'u18-iii' %}active{% endif %}">Urbino 18 III</a>
-</div>
-
-<div class="gallery-container">
-    {% for bus in buses %}
-    <div class="bus-card">
-        <img src="{{ url_for('static', filename='images/' + bus.image) }}" alt="{{ bus.title }}">
-        <h3>{{ bus.title }}</h3>
+    <!-- Филтър бутони -->
+    <div style="margin-bottom: 30px;">
+        <a href="{{ url_for('gallery', model='all') }}" style="margin: 5px; padding: 8px 15px; background: #333; color: #fff; text-decoration: none; border-radius: 5px;">Всички</a>
+        <a href="{{ url_for('gallery', model='u12-iii') }}" style="margin: 5px; padding: 8px 15px; background: #333; color: #fff; text-decoration: none; border-radius: 5px;">Urbino 12 III</a>
+        <a href="{{ url_for('gallery', model='u18-iii') }}" style="margin: 5px; padding: 8px 15px; background: #333; color: #fff; text-decoration: none; border-radius: 5px;">Urbino 18 III</a>
+        <a href="{{ url_for('gallery', model='u12-iv') }}" style="margin: 5px; padding: 8px 15px; background: #333; color: #fff; text-decoration: none; border-radius: 5px;">Urbino 12 IV</a>
     </div>
-    {% endfor %}
+
+    <!-- Мрежа със снимки -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+        {% for bus in buses %}
+        <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333; width: 300px;">
+            <img src="{{ url_for('static', filename='images/' ~ bus.image) }}" 
+                 alt="{{ bus.title }}" 
+                 onclick="openModal(this.src)"
+                 style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px; cursor: pointer; transition: transform 0.2s;"
+                 onmouseover="this.style.transform='scale(1.03)'" 
+                 onmouseout="this.style.transform='scale(1)'">
+            <h4 style="color: #fff; margin-top: 10px;">{{ bus.title }}</h4>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Текст най-долу -->
+    <p style="color: #888; font-size: 18px; margin-top: 50px; font-weight: bold;">
+        Очаквайте още снимки :D
+    </p>
 </div>
+
+<!-- Модален прозорец за голям екран -->
+<div id="imageModal" onclick="closeModal()" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; cursor: pointer;">
+    <span style="position: absolute; top: 20px; right: 35px; color: #fff; font-size: 40px; font-weight: bold;">&times;</span>
+    <img id="modalImg" style="max-width: 90%; max-height: 85%; border-radius: 8px; box-shadow: 0 0 20px rgba(255,255,255,0.2);">
+</div>
+
+<script>
+function openModal(src) {
+    var modal = document.getElementById("imageModal");
+    var modalImg = document.getElementById("modalImg");
+    modal.style.display = "flex";
+    modalImg.src = src;
+}
+
+function closeModal() {
+    document.getElementById("imageModal").style.display = "none";
+}
+</script>
 {% endblock %}
