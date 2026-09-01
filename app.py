@@ -34,8 +34,16 @@ class Application(db.Model):
     experience = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default='Pending')
 
+from sqlalchemy import text
+
 with app.app_context():
     db.create_all()
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(text("""ALTER TABLE "user" ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Гост';"""))
+            conn.commit()
+    except Exception as e:
+        print(f"Миграцията не беше нужна или възникна грешка: {e}")
 
 @login_manager.user_loader
 def load_user(user_id):
