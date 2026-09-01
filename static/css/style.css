@@ -197,6 +197,12 @@ button:hover, .btn-primary:hover {
     margin-left: 5px;
 }
 
+.dev-tag {
+    color: #ff3333;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
 .flash {
     padding: 10px;
     margin: 10px auto;
