@@ -116,6 +116,12 @@ nav a {
     width: 100%;
     border-radius: 8px;
     display: block;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bus-card img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 15px rgba(0, 170, 255, 0.3);
 }
 
 .bus-card h3 {
@@ -124,7 +130,7 @@ nav a {
     font-size: 18px;
 }
 
-.form-container {
+.form-container, .auth-container {
     max-width: 400px;
     margin: 40px auto;
     padding: 25px;
@@ -132,23 +138,40 @@ nav a {
     border-radius: 8px;
 }
 
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #ccc;
+}
+
 input, textarea {
     width: 100%;
     padding: 10px;
-    margin: 10px 0;
+    margin: 5px 0 10px 0;
     border-radius: 4px;
     border: 1px solid #333;
     background: #2b2b2b;
     color: white;
 }
 
-button {
+button, .btn-primary {
     padding: 10px 20px;
     background: #00aaff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+button:hover, .btn-primary:hover {
+    background: #0088cc;
 }
 
 .social-links {
@@ -162,8 +185,14 @@ button {
     text-decoration: none;
 }
 
+.main-admin-tag {
+    color: #ff3333;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
 .admin-tag {
-    color: #ff4d4d;
+    color: #ffaa00;
     font-weight: bold;
     margin-left: 5px;
 }
@@ -180,19 +209,16 @@ button {
     color: white;
 }
 
-.flash.error {
+.flash.error, .flash.danger {
     background: #c62828;
     color: white;
 }
 
-.bus-card img {
-    width: 100%;
-    border-radius: 8px;
-    display: block;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.flash.info {
+    background: #0288d1;
+    color: white;
 }
 
-.bus-card img:hover {
-    transform: scale(1.03);
-    box-shadow: 0 6px 15px rgba(0, 170, 255, 0.3);
+a {
+    color: #00aaff;
 }
