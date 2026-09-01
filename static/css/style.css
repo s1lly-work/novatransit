@@ -184,3 +184,15 @@ button {
     background: #c62828;
     color: white;
 }
+
+.bus-card img {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bus-card img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 15px rgba(0, 170, 255, 0.3);
+}
