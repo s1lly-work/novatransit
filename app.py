@@ -14,6 +14,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 
 SUPER_ADMIN_USERNAME = 's1llyy'
 
+db = SQLAlchemy(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
