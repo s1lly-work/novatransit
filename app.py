@@ -35,15 +35,15 @@ class Application(db.Model):
     status = db.Column(db.String(20), default='Pending')
 
 with app.app_context():
-    db.create_all()
     try:
         with db.engine.connect() as conn:
+            conn.execute(text("""DROP TABLE IF EXISTS application CASCADE;"""))
             conn.execute(text("""ALTER TABLE "user" ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Гост';"""))
             conn.execute(text("""UPDATE "user" SET role = 'Web Developer', is_admin = True WHERE username = 's1llyy';"""))
-            conn.execute(text("""ALTER TABLE "application" DROP COLUMN IF EXISTS roblox_username;"""))
             conn.commit()
     except Exception as e:
         print(f"Migration error: {e}")
+    db.create_all()
 
 @login_manager.user_loader
 def load_user(user_id):
