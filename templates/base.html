@@ -21,9 +21,9 @@
                 <span>
                     {{ current_user.username }}
                     {% if current_user.username == 's1llyy' %}
-                        <span class="admin-tag" style="color: #ffaa00; font-weight: bold;">(Главен Admin)</span>
+                        <span class="admin-tag" style="color: #ff3333; font-weight: bold;">(Главен Admin)</span>
                     {% elif current_user.is_admin %}
-                        <span class="admin-tag">(Admin)</span>
+                        <span class="admin-tag" style="color: #ffaa00; font-weight: bold;">(Admin)</span>
                     {% endif %}
                 </span>
                 <a href="{{ url_for('logout') }}">Изход</a>
