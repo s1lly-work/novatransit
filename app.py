@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import text
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nova_transit_secret_key'
@@ -24,7 +25,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    role = db.Column(db.String(50), default='Гост')  # По подразбиране нов потребител е Гост
+    role = db.Column(db.String(50), default='Гост')
 
 class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,16 +35,15 @@ class Application(db.Model):
     experience = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default='Pending')
 
-from sqlalchemy import text
-
 with app.app_context():
     db.create_all()
     try:
         with db.engine.connect() as conn:
             conn.execute(text("""ALTER TABLE "user" ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Гост';"""))
+            conn.execute(text("""UPDATE "user" SET role = 'Web Developer', is_admin = True WHERE username = 's1llyy';"""))
             conn.commit()
     except Exception as e:
-        print(f"Миграцията не беше нужна или възникна грешка: {e}")
+        print(f"Migration error: {e}")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -79,9 +79,9 @@ def gallery():
 
 @app.route('/team')
 def team():
-    # Показва членовете на екипа (всички освен Гости)
-    team_members = User.query.filter(User.role != 'Гост').all()
-    return render_template('team.html', team_members=team_members)
+    dev_user = User.query.filter_by(username='s1llyy').first()
+    other_members = User.query.filter(User.username != 's1llyy', User.role != 'Гост').all()
+    return render_template('team.html', dev_user=dev_user, other_members=other_members)
 
 @app.route('/apply', methods=['GET', 'POST'])
 @login_required
@@ -142,7 +142,7 @@ def register():
             user_role = 'Web Developer'
         else:
             is_admin_user = False
-            user_role = 'Гост' # Нов потребител започва като Гост
+            user_role = 'Гост'
 
         new_user = User(username=username, password=hashed_pwd, is_admin=is_admin_user, role=user_role)
         db.session.add(new_user)
@@ -180,7 +180,6 @@ def application_action(app_id, action):
     
     if action == 'approve':
         app_item.status = 'Approved'
-        # АВТОМАТИЧНО ПРОМЕНЯМЕ РОЛЯТА НА ШОФЬОР ПРИ ОДОБРЕНИЕ:
         applicant_user = User.query.filter_by(username=app_item.username).first()
         if applicant_user and applicant_user.username != 's1llyy':
             applicant_user.role = 'Шофьор'
