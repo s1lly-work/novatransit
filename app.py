@@ -6,6 +6,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nova_transit_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 
+SUPER_ADMIN_USERNAME = 's1llyy'
+
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -20,6 +22,7 @@ class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     experience = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default='Pending')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 @login_manager.user_loader
@@ -38,6 +41,16 @@ def gallery():
         {'title': 'Solaris Urbino 12 III', 'image': '8571.png', 'category': 'u12-iii'},
         {'title': 'Solaris Urbino 12 IV', 'image': '0229.png', 'category': 'u12-iv'},
         {'title': 'Solaris Urbino 18 III', 'image': '8703.png', 'category': 'u18-iii'},
+        {'title': 'Solaris Urbino 18 III', 'image': '8665.png', 'category': 'u18-iii'},
+        {'title': 'Solaris Urbino 12 III', 'image': '8566.png', 'category': 'u12-iii'},
+        {'title': 'Solaris Urbino 12 III', 'image': '8538.png', 'category': 'u12-iii'},
+        {'title': 'Solaris Urbino 12 III', 'image': '8599.png', 'category': 'u12-iii'},
+        {'title': 'Solaris Urbino 18 III', 'image': '8692.png', 'category': 'u18-iii'},
+        {'title': 'Solaris Urbino 12 IV', 'image': '0231.png', 'category': 'u12-iv'},
+        {'title': 'Solaris Urbino 12 III', 'image': '8574.png', 'category': 'u12-iii'},
+        {'title': 'Solaris Urbino 12 III', 'image': '8590.png', 'category': 'u12-iii'},
+        {'title': 'Solaris Urbino 12 III', 'image': '8658.png', 'category': 'u12-iii'},
+        {'title': 'Solaris Urbino 18 III', 'image': '8691.png', 'category': 'u18-iii'},
     ]
 
     if model != 'all':
@@ -50,17 +63,23 @@ def gallery():
 @app.route('/apply', methods=['GET', 'POST'])
 @login_required
 def apply():
+    existing_application = Application.query.filter_by(user_id=current_user.id, status='Pending').first()
+
     if request.method == 'POST':
+        if existing_application:
+            flash('Вече имате активна кандидатура!', 'error')
+            return redirect(url_for('apply'))
+
         name = request.form.get('name')
         experience = request.form.get('experience')
-        
+
         new_app = Application(name=name, experience=experience, user_id=current_user.id)
         db.session.add(new_app)
         db.session.commit()
         flash('Кандидатурата е изпратена успешно!', 'success')
         return redirect(url_for('home'))
-        
-    return render_template('apply.html')
+
+    return render_template('apply.html', has_pending_application=bool(existing_application))
 
 @app.route('/admin')
 @login_required
@@ -81,6 +100,11 @@ def toggle_admin(user_id):
         return redirect(url_for('home'))
     
     user = User.query.get_or_404(user_id)
+
+    if user.username == SUPER_ADMIN_USERNAME:
+        flash('Правата на главния администратор не могат да бъдат променяни!', 'error')
+        return redirect(url_for('admin_panel'))
+
     user.is_admin = not user.is_admin
     db.session.commit()
     flash('Правата на потребителя бяха променени!', 'success')
@@ -124,6 +148,4 @@ with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
