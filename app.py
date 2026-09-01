@@ -180,8 +180,24 @@ def toggle_admin(user_id):
     flash('Правата бяха обновени успешно!', 'success')
     return redirect(url_for('admin_panel'))
 
-with app.app_context():
-    db.create_all()
+@app.route('/admin/change_password/<int:user_id>', methods=['POST'])
+@login_required
+def admin_change_password(user_id):
+    if not current_user.is_admin:
+        flash('Нямате достъп до тази функция!', 'danger')
+        return redirect(url_for('home'))
+
+    new_password = request.form.get('new_password')
+    target_user = User.query.get_or_404(user_id)
+
+    if new_password:
+        target_user.password = generate_password_hash(new_password, method='scrypt')
+        db.session.commit()
+        flash(f'Паролата на {target_user.username} беше променена успешно!', 'success')
+    else:
+        flash('Моля, въведете валидна парола!', 'danger')
+
+    return redirect(url_for('admin_panel'))
 
 if __name__ == '__main__':
     app.run(debug=True)
