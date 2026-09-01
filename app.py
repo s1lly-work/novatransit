@@ -44,15 +44,15 @@ BUSES_DATA = [
     {"title": "Solaris Urbino 12 III", "image": "8566.png", "category": "u12-iii"},
     {"title": "Solaris Urbino 12 III", "image": "8571.png", "category": "u12-iii"},
     {"title": "Solaris Urbino 12 III", "image": "8658.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 18 III", "image": "8698.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 18 III", "image": "8692.png", "category": "u18-iii"},
     {"title": "Solaris Urbino 18 III", "image": "8703.png", "category": "u18-iii"},
     {"title": "Solaris Urbino 12 III", "image": "8574.png", "category": "u12-iii"},
     {"title": "Solaris Urbino 12 III", "image": "8599.png", "category": "u12-iii"},
     {"title": "Solaris Urbino 12 III", "image": "8538.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III", "image": "8691.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 18 III", "image": "8691.png", "category": "u18-iii"},
     {"title": "Solaris Urbino 12 IV", "image": "0231.png", "category": "u12-iv"},
     {"title": "Solaris Urbino 18 III", "image": "8665.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 12 III", "image": "8550.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 IV", "image": "0229.png", "category": "u12-iv"},
 ]
 
 @app.route('/')
