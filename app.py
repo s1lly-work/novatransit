@@ -1,12 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+import os
+from flask import Flask, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'nova_transit_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-
-SUPER_ADMIN_USERNAME = 's1llyy'
+app.config['SECRET_KEY'] = 'nova-transit-secret-key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -14,20 +15,36 @@ login_manager.login_view = 'login'
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(150), nullable=False)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
 
 class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(50), nullable=False)
+    roblox_username = db.Column(db.String(50), nullable=False)
+    age = db.Column(db.Integer, nullable=False)
     experience = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default='Pending')
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+BUSES_DATA = [
+    {"title": "Solaris Urbino 12 III", "image": "8566.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 IV", "image": "8571.png", "category": "u12-iv"},
+    {"title": "Solaris Urbino 18 III", "image": "8658.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 18 III", "image": "8698.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 12 III", "image": "8703.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III", "image": "8574.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III", "image": "8599.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 18 III", "image": "8538.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 12 IV", "image": "8601.png", "category": "u12-iv"},
+    {"title": "Solaris Urbino 12 III", "image": "0231.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III", "image": "8665.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 18 III", "image": "8550.png", "category": "u18-iii"},
+]
 
 @app.route('/')
 def home():
@@ -35,91 +52,53 @@ def home():
 
 @app.route('/gallery')
 def gallery():
-    model = request.args.get('model', 'all')
-
-    all_buses = [
-        {'title': 'Solaris Urbino 12 III', 'image': '8571.png', 'category': 'u12-iii'},
-        {'title': 'Solaris Urbino 12 IV', 'image': '0229.png', 'category': 'u12-iv'},
-        {'title': 'Solaris Urbino 18 III', 'image': '8703.png', 'category': 'u18-iii'},
-        {'title': 'Solaris Urbino 18 III', 'image': '8665.png', 'category': 'u18-iii'},
-        {'title': 'Solaris Urbino 12 III', 'image': '8566.png', 'category': 'u12-iii'},
-        {'title': 'Solaris Urbino 12 III', 'image': '8538.png', 'category': 'u12-iii'},
-        {'title': 'Solaris Urbino 12 III', 'image': '8599.png', 'category': 'u12-iii'},
-        {'title': 'Solaris Urbino 18 III', 'image': '8692.png', 'category': 'u18-iii'},
-        {'title': 'Solaris Urbino 12 IV', 'image': '0231.png', 'category': 'u12-iv'},
-        {'title': 'Solaris Urbino 12 III', 'image': '8574.png', 'category': 'u12-iii'},
-        {'title': 'Solaris Urbino 12 III', 'image': '8590.png', 'category': 'u12-iii'},
-        {'title': 'Solaris Urbino 12 III', 'image': '8658.png', 'category': 'u12-iii'},
-        {'title': 'Solaris Urbino 18 III', 'image': '8691.png', 'category': 'u18-iii'},
-    ]
-
-    if model != 'all':
-        buses = [b for b in all_buses if b['category'] == model]
+    selected_model = request.args.get('model', 'all')
+    if selected_model == 'all':
+        filtered_buses = BUSES_DATA
     else:
-        buses = all_buses
-
-    return render_template('gallery.html', buses=buses, selected_model=model)
+        filtered_buses = [b for b in BUSES_DATA if b['category'] == selected_model]
+    return render_template('gallery.html', buses=filtered_buses, selected_model=selected_model)
 
 @app.route('/apply', methods=['GET', 'POST'])
 @login_required
 def apply():
-    existing_application = Application.query.filter_by(user_id=current_user.id, status='Pending').first()
+    existing_app = Application.query.filter_by(username=current_user.username, status='Pending').first()
+    if existing_app:
+        flash('Вече имате активна кандидатура, която изчаква преглед!', 'danger')
+        return redirect(url_for('home'))
 
     if request.method == 'POST':
-        if existing_application:
-            flash('Вече имате активна кандидатура!', 'error')
-            return redirect(url_for('apply'))
-
-        name = request.form.get('name')
+        roblox_username = request.form.get('roblox_username')
+        age = request.form.get('age')
         experience = request.form.get('experience')
 
-        new_app = Application(name=name, experience=experience, user_id=current_user.id)
+        new_app = Application(
+            username=current_user.username,
+            roblox_username=roblox_username,
+            age=int(age),
+            experience=experience
+        )
         db.session.add(new_app)
         db.session.commit()
         flash('Кандидатурата е изпратена успешно!', 'success')
         return redirect(url_for('home'))
 
-    return render_template('apply.html', has_pending_application=bool(existing_application))
-
-@app.route('/admin')
-@login_required
-def admin_panel():
-    if not current_user.is_admin:
-        flash('Нямате достъп до тази страница!', 'error')
-        return redirect(url_for('home'))
-    
-    applications = Application.query.all()
-    users = User.query.all()
-    return render_template('admin.html', applications=applications, users=users)
-
-@app.route('/toggle_admin/<int:user_id>')
-@login_required
-def toggle_admin(user_id):
-    if not current_user.is_admin:
-        flash('Нямате достъп!', 'error')
-        return redirect(url_for('home'))
-    
-    user = User.query.get_or_404(user_id)
-
-    if user.username == SUPER_ADMIN_USERNAME:
-        flash('Правата на главния администратор не могат да бъдат променяни!', 'error')
-        return redirect(url_for('admin_panel'))
-
-    user.is_admin = not user.is_admin
-    db.session.commit()
-    flash('Правата на потребителя бяха променени!', 'success')
-    return redirect(url_for('admin_panel'))
+    return render_template('apply.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        user = User.query.filter_by(username=username, password=password).first()
-        if user:
+        user = User.query.filter_by(username=username).first()
+
+        if user and check_password_hash(user.password, password):
             login_user(user)
+            flash('Успешен вход!', 'success')
             return redirect(url_for('home'))
-        flash('Грешни данни за вход!', 'error')
+        else:
+            flash('Грешно потребителско име или парола.', 'danger')
+
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -127,22 +106,70 @@ def register():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+
         if User.query.filter_by(username=username).first():
-            flash('Потребителското име вече съществува!', 'error')
-        else:
-            is_first_user = User.query.count() == 0
-            new_user = User(username=username, password=password, is_admin=is_first_user)
-            db.session.add(new_user)
-            db.session.commit()
-            flash('Успешна регистрация! Моля, влезете.', 'success')
-            return redirect(url_for('login'))
+            flash('Това потребителско име вече е заето.', 'danger')
+            return redirect(url_for('register'))
+
+        hashed_pwd = generate_password_hash(password, method='scrypt')
+        is_admin_user = True if username == 's1llyy' else False
+
+        new_user = User(username=username, password=hashed_pwd, is_admin=is_admin_user)
+        db.session.add(new_user)
+        db.session.commit()
+        flash('Регистрацията е успешна! Можете да влезете.', 'success')
+        return redirect(url_for('login'))
+
     return render_template('register.html')
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
+    flash('Излязохте от профила си.', 'info')
     return redirect(url_for('home'))
+
+@app.route('/admin')
+@login_required
+def admin_panel():
+    if not current_user.is_admin:
+        flash('Нямате достъп до тази страница!', 'danger')
+        return redirect(url_for('home'))
+    
+    applications = Application.query.all()
+    users = User.query.all()
+    return render_template('admin.html', applications=applications, users=users)
+
+@app.route('/admin/action/<int:app_id>/<string:action>')
+@login_required
+def application_action(app_id, action):
+    if not current_user.is_admin:
+        return redirect(url_for('home'))
+    
+    app_item = Application.query.get_or_404(app_id)
+    if action == 'approve':
+        app_item.status = 'Approved'
+    elif action == 'reject':
+        app_item.status = 'Rejected'
+    db.session.commit()
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/toggle_admin/<int:user_id>')
+@login_required
+def toggle_admin(user_id):
+    if not current_user.is_admin:
+        return redirect(url_for('home'))
+    
+    target_user = User.query.get_or_404(user_id)
+    
+    if target_user.username == 's1llyy':
+        flash('Правата на Главния администратор не могат да бъдат променяни!', 'danger')
+        return redirect(url_for('admin_panel'))
+        
+    target_user.is_admin = not target_user.is_admin
+    db.session.commit()
+    flash('Правата бяха обновени успешно!', 'success')
+    return redirect(url_for('admin_panel'))
 
 with app.app_context():
     db.create_all()
