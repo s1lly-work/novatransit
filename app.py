@@ -24,6 +24,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+    role = db.Column(db.String(50), default='Гост')  # По подразбиране нов потребител е Гост
 
 class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,18 +42,18 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 BUSES_DATA = [
-    {"title": "Solaris Urbino 12 III - 8566 CNG", "image": "8566.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III - 8571 CNG", "image": "8571.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III - 8658 ", "image": "8658.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 18 III - 8692", "image": "8692.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 18 III - 8703", "image": "8703.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 12 III - 8574", "image": "8574.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III - 8599", "image": "8599.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III - 8538 CNG", "image": "8538.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 18 III - 8691", "image": "8691.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 12 IV - 0231", "image": "0231.png", "category": "u12-iv"},
-    {"title": "Solaris Urbino 18 III - 8665", "image": "8665.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 12 IV - 0229", "image": "0229.png", "category": "u12-iv"},
+    {"title": "Solaris Urbino 12 III", "image": "8566.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III", "image": "8571.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III", "image": "8658.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 18 III", "image": "8698.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 18 III", "image": "8703.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 12 III", "image": "8574.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III", "image": "8599.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III", "image": "8538.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 18 III", "image": "8691.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 12 IV", "image": "0231.png", "category": "u12-iv"},
+    {"title": "Solaris Urbino 18 III", "image": "8665.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 12 III", "image": "8550.png", "category": "u12-iii"},
 ]
 
 @app.route('/')
@@ -67,6 +68,12 @@ def gallery():
     else:
         filtered_buses = [b for b in BUSES_DATA if b['category'] == selected_model]
     return render_template('gallery.html', buses=filtered_buses, selected_model=selected_model)
+
+@app.route('/team')
+def team():
+    # Показва членовете на екипа (всички освен Гости)
+    team_members = User.query.filter(User.role != 'Гост').all()
+    return render_template('team.html', team_members=team_members)
 
 @app.route('/apply', methods=['GET', 'POST'])
 @login_required
@@ -121,9 +128,15 @@ def register():
             return redirect(url_for('register'))
 
         hashed_pwd = generate_password_hash(password, method='scrypt')
-        is_admin_user = True if username == 's1llyy' else False
+        
+        if username == 's1llyy':
+            is_admin_user = True
+            user_role = 'Web Developer'
+        else:
+            is_admin_user = False
+            user_role = 'Гост' # Нов потребител започва като Гост
 
-        new_user = User(username=username, password=hashed_pwd, is_admin=is_admin_user)
+        new_user = User(username=username, password=hashed_pwd, is_admin=is_admin_user, role=user_role)
         db.session.add(new_user)
         db.session.commit()
         flash('Регистрацията е успешна! Можете да влезете.', 'success')
@@ -156,28 +169,42 @@ def application_action(app_id, action):
         return redirect(url_for('home'))
     
     app_item = Application.query.get_or_404(app_id)
+    
     if action == 'approve':
         app_item.status = 'Approved'
+        # АВТОМАТИЧНО ПРОМЕНЯМЕ РОЛЯТА НА ШОФЬОР ПРИ ОДОБРЕНИЕ:
+        applicant_user = User.query.filter_by(username=app_item.username).first()
+        if applicant_user and applicant_user.username != 's1llyy':
+            applicant_user.role = 'Шофьор'
+            db.session.commit()
+            flash(f'Кандидатурата е одобрена и {applicant_user.username} вече е Шофьор!', 'success')
+            return redirect(url_for('admin_panel'))
+            
     elif action == 'reject':
         app_item.status = 'Rejected'
+        flash('Кандидатурата е отхвърлена.', 'info')
+
     db.session.commit()
     return redirect(url_for('admin_panel'))
 
-@app.route('/admin/toggle_admin/<int:user_id>')
+@app.route('/admin/set_role/<int:user_id>/<string:new_role>')
 @login_required
-def toggle_admin(user_id):
+def set_role(user_id, new_role):
     if not current_user.is_admin:
         return redirect(url_for('home'))
     
     target_user = User.query.get_or_404(user_id)
-    
     if target_user.username == 's1llyy':
-        flash('Правата на Главния администратор не могат да бъдат променяни!', 'danger')
+        flash('Ролята на Web Developer не може да се променя!', 'danger')
         return redirect(url_for('admin_panel'))
-        
-    target_user.is_admin = not target_user.is_admin
-    db.session.commit()
-    flash('Правата бяха обновени успешно!', 'success')
+
+    valid_roles = ['Гост', 'Шофьор', 'Диспечер', 'Администратор']
+    if new_role in valid_roles:
+        target_user.role = new_role
+        target_user.is_admin = True if new_role == 'Администратор' else False
+        db.session.commit()
+        flash(f'Ролята на {target_user.username} беше променена на {new_role}!', 'success')
+
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/change_password/<int:user_id>', methods=['POST'])
