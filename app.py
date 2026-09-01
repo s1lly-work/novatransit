@@ -30,6 +30,7 @@ class User(UserMixin, db.Model):
 class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), nullable=False)
+    roblox_username = db.Column(db.String(50), default='', nullable=True)
     age = db.Column(db.Integer, nullable=False)
     experience = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default='Pending')
@@ -40,7 +41,7 @@ with app.app_context():
         with db.engine.connect() as conn:
             conn.execute(text("""ALTER TABLE "user" ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Гост';"""))
             conn.execute(text("""UPDATE "user" SET role = 'Web Developer', is_admin = True WHERE username = 's1llyy';"""))
-            conn.execute(text("""ALTER TABLE "application" DROP COLUMN IF EXISTS roblox_username;"""))
+            conn.execute(text("""ALTER TABLE "application" ALTER COLUMN roblox_username DROP NOT NULL;"""))
             conn.commit()
     except Exception as e:
         print(f"Migration error: {e}")
@@ -50,18 +51,18 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 BUSES_DATA = [
-    {"title": "Solaris Urbino 12 III", "image": "8566.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III", "image": "8571.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III", "image": "8658.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 18 III", "image": "8698.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 18 III", "image": "8703.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 12 III", "image": "8574.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III", "image": "8599.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III", "image": "8538.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 18 III", "image": "8691.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 12 IV", "image": "0231.png", "category": "u12-iv"},
-    {"title": "Solaris Urbino 18 III", "image": "8665.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 12 III", "image": "8550.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III - 8566 CNG", "image": "8566.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III - 8571 CNG", "image": "8571.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III - 8658", "image": "8658.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 18 III - 8692", "image": "8692.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 18 III - 8703", "image": "8703.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 12 III - 8574", "image": "8574.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III - 8599", "image": "8599.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 12 III - 8538", "image": "8538.png", "category": "u12-iii"},
+    {"title": "Solaris Urbino 18 III - 8691", "image": "8691.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 12 IV - 0231", "image": "0231.png", "category": "u12-iv"},
+    {"title": "Solaris Urbino 18 III - 8665", "image": "8665.png", "category": "u18-iii"},
+    {"title": "Solaris Urbino 12 IV - 0229", "image": "0229.png", "category": "u12-iv"},
 ]
 
 @app.route('/')
@@ -97,6 +98,7 @@ def apply():
 
         new_app = Application(
             username=current_user.username,
+            roblox_username="",
             age=int(age),
             experience=experience
         )
