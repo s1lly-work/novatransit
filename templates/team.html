@@ -1,1 +1,28 @@
+{% extends 'base.html' %}
 
+{% block content %}
+<div style="max-width: 900px; margin: 40px auto; padding: 20px;">
+    <h2>Нашият Екип</h2>
+    <p style="color: #ccc; margin-bottom: 30px;">Ето служителите и ръководството на Nova Transit EAD.</p>
+
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+        {% for member in team_members %}
+        <div style="background: #1e1e1e; padding: 20px; border-radius: 8px; width: 220px; border: 1px solid #333;">
+            <h3 style="color: #fff; margin-bottom: 10px;">{{ member.username }}</h3>
+            
+            {% if member.username == 's1llyy' %}
+                <span class="dev-tag" style="display: inline-block; margin: 0;">[Web Developer]</span>
+            {% elif member.role == 'Администратор' %}
+                <span style="color: #ffaa00; font-weight: bold;">(Администратор)</span>
+            {% elif member.role == 'Диспечер' %}
+                <span style="color: #00aaff; font-weight: bold;">(Диспечер)</span>
+            {% elif member.role == 'Шофьор' %}
+                <span style="color: #00e676; font-weight: bold;">(Шофьор)</span>
+            {% endif %}
+        </div>
+        {% else %}
+        <p style="color: #888;">Все още няма вписани членове на екипа.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
