@@ -22,7 +22,7 @@
                 <span>
                     {{ current_user.username }}
                     {% if current_user.username == 's1llyy' or current_user.role == 'Web Developer' %}
-                        <span class="dev-tag" style="color: #ff3333; font-weight: bold;">[Web Developer]</span>
+                        <span class="dev-tag" style="color: #ff3333; font-weight: bold;">Web Developer</span>
                     {% elif current_user.role == 'Администратор' or current_user.is_admin %}
                         <span class="admin-tag" style="color: #ffaa00; font-weight: bold;">(Admin)</span>
                     {% elif current_user.role == 'Диспечер' %}
