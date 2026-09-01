@@ -30,7 +30,6 @@ class User(UserMixin, db.Model):
 class Application(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), nullable=False)
-    roblox_username = db.Column(db.String(50), default='', nullable=True)
     age = db.Column(db.Integer, nullable=False)
     experience = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default='Pending')
@@ -41,7 +40,7 @@ with app.app_context():
         with db.engine.connect() as conn:
             conn.execute(text("""ALTER TABLE "user" ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Гост';"""))
             conn.execute(text("""UPDATE "user" SET role = 'Web Developer', is_admin = True WHERE username = 's1llyy';"""))
-            conn.execute(text("""ALTER TABLE "application" ALTER COLUMN roblox_username DROP NOT NULL;"""))
+            conn.execute(text("""ALTER TABLE "application" DROP COLUMN IF EXISTS roblox_username;"""))
             conn.commit()
     except Exception as e:
         print(f"Migration error: {e}")
@@ -98,7 +97,6 @@ def apply():
 
         new_app = Application(
             username=current_user.username,
-            roblox_username="",
             age=int(age),
             experience=experience
         )
