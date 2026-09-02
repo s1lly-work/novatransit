@@ -58,15 +58,40 @@ class Photo(db.Model):
 
 with app.app_context():
     db.create_all()
+    
+    inspector = db.inspect(db.engine)
+    
+    user_columns = [col['name'] for col in inspector.get_columns('user')]
+    if 'role' not in user_columns:
+        with db.engine.connect() as conn:
+            conn.execute(text('ALTER TABLE "user" ADD COLUMN role VARCHAR(50) DEFAULT \'Гост\''))
+            conn.commit()
+
+    photo_columns = [col['name'] for col in inspector.get_columns('photo')]
+    photo_cols_to_add = {
+        'photo_date': "VARCHAR(50) DEFAULT 'Неизвестна'",
+        'photo_type': "VARCHAR(100) DEFAULT 'Градски транспорт'",
+        'location': "VARCHAR(100) DEFAULT 'Неизвестна'",
+        'vehicle_type': "VARCHAR(100) DEFAULT 'Автобус'",
+        'inventory_number': "VARCHAR(50) DEFAULT ''",
+        'comment': "TEXT DEFAULT ''",
+        'is_author': "BOOLEAN DEFAULT TRUE",
+        'status': "VARCHAR(20) DEFAULT 'Pending'",
+        'created_at': "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+    }
+
+    for col_name, col_def in photo_cols_to_add.items():
+        if col_name not in photo_columns:
+            with db.engine.connect() as conn:
+                conn.execute(text(f'ALTER TABLE photo ADD COLUMN {col_name} {col_def}'))
+                conn.commit()
+
     try:
         with db.engine.connect() as conn:
-            conn.execute(text("""
-                DO $$                BEGIN                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user' AND column_name='role') THEN                        ALTER TABLE "user" ADD COLUMN role VARCHAR(50) DEFAULT 'Гост';                    END IF;                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='photo_date') THEN                        ALTER TABLE photo ADD COLUMN photo_date VARCHAR(50) DEFAULT 'Неизвестна';                    END IF;                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='photo_type') THEN                        ALTER TABLE photo ADD COLUMN photo_type VARCHAR(100) DEFAULT 'Градски транспорт';                    END IF;                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='location') THEN                        ALTER TABLE photo ADD COLUMN location VARCHAR(100) DEFAULT 'Неизвестна';                    END IF;                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='vehicle_type') THEN                        ALTER TABLE photo ADD COLUMN vehicle_type VARCHAR(100) DEFAULT 'Автобус';                    END IF;                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='inventory_number') THEN                        ALTER TABLE photo ADD COLUMN inventory_number VARCHAR(50) DEFAULT '';                    END IF;                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='comment') THEN                        ALTER TABLE photo ADD COLUMN comment TEXT DEFAULT '';                    END IF;                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='is_author') THEN                        ALTER TABLE photo ADD COLUMN is_author BOOLEAN DEFAULT TRUE;                    END IF;                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='status') THEN                        ALTER TABLE photo ADD COLUMN status VARCHAR(20) DEFAULT 'Pending';                    END IF;                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='created_at') THEN                        ALTER TABLE photo ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;                    END IF;                END $$;
-            """))
-            conn.execute(text("""UPDATE "user" SET role = 'Web Developer', is_admin = True WHERE username = 's1llyy';"""))
+            conn.execute(text('UPDATE "user" SET role = \'Web Developer\', is_admin = True WHERE username = \'s1llyy\''))
             conn.commit()
     except Exception as e:
-        print(f"Migration notice: {e}")
+        print(f"Admin update notice: {e}")
 
 @login_manager.user_loader
 def load_user(user_id):
