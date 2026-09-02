@@ -162,7 +162,7 @@ def upload_photo():
         flash('Снимката е изпратена за одобрение от Главен Администратор!', 'success')
         return redirect(url_for('gallery'))
 
-    return render_template('upload_photo.html')
+    return render_template('upload_photos.html')
 
 @app.route('/upload-photos', methods=['GET', 'POST'])
 @login_required
