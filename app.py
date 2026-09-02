@@ -1,12 +1,19 @@
 import os
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from sqlalchemy import text
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nova_transit_secret_key'
+
+UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
 if db_url.startswith("postgres://"):
@@ -14,11 +21,12 @@ if db_url.startswith("postgres://"):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 
-SUPER_ADMIN_USERNAME = 's1llyy'
-
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,35 +42,38 @@ class Application(db.Model):
     experience = db.Column(db.Text, nullable=False)
     status = db.Column(db.String(20), default='Pending')
 
+class Photo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    uploader_username = db.Column(db.String(50), nullable=False)
+    photo_date = db.Column(db.String(50), default='Неизвестна')
+    photo_type = db.Column(db.String(100), default='Градски транспорт')
+    location = db.Column(db.String(100), default='Неизвестна')
+    vehicle_type = db.Column(db.String(100), default='Автобус')
+    inventory_number = db.Column(db.String(50), default='')
+    comment = db.Column(db.Text, default='')
+    is_author = db.Column(db.Boolean, default=True)
+    status = db.Column(db.String(20), default='Pending')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 with app.app_context():
+    db.create_all()
     try:
         with db.engine.connect() as conn:
-            conn.execute(text("""DROP TABLE IF EXISTS application CASCADE;"""))
             conn.execute(text("""ALTER TABLE "user" ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Гост';"""))
             conn.execute(text("""UPDATE "user" SET role = 'Web Developer', is_admin = True WHERE username = 's1llyy';"""))
             conn.commit()
     except Exception as e:
         print(f"Migration error: {e}")
-    db.create_all()
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-BUSES_DATA = [
-    {"title": "Solaris Urbino 12 III - 8566 CNG", "image": "8566.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III - 8571 CNG", "image": "8571.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III - 8658", "image": "8658.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 18 III - 8692", "image": "8692.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 18 III - 8703", "image": "8703.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 12 III - 8574", "image": "8574.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III - 8599", "image": "8599.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 12 III - 8538", "image": "8538.png", "category": "u12-iii"},
-    {"title": "Solaris Urbino 18 III - 8691", "image": "8691.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 12 IV - 0231", "image": "0231.png", "category": "u12-iv"},
-    {"title": "Solaris Urbino 18 III - 8665", "image": "8665.png", "category": "u18-iii"},
-    {"title": "Solaris Urbino 12 IV - 0229", "image": "0229.png", "category": "u12-iv"},
-]
+def is_chief_admin():
+    return current_user.is_authenticated and (
+        current_user.role in ['Главен Администратор', 'Web Developer'] or current_user.username == 's1llyy'
+    )
 
 @app.route('/')
 def home():
@@ -70,35 +81,108 @@ def home():
 
 @app.route('/gallery')
 def gallery():
-    selected_model = request.args.get('model', 'all')
-    if selected_model == 'all':
-        filtered_buses = BUSES_DATA
-    else:
-        filtered_buses = [b for b in BUSES_DATA if b['category'] == selected_model]
-    return render_template('gallery.html', buses=filtered_buses, selected_model=selected_model)
+    approved_photos = Photo.query.filter_by(status='Approved').order_by(Photo.created_at.desc()).all()
+    return render_template('gallery.html', photos=approved_photos)
 
-@app.route('/team')
-def team():
-    dev_user = User.query.filter_by(username='s1llyy').first()
-    other_members = User.query.filter(User.username != 's1llyy', User.role != 'Гост').all()
-    return render_template('team.html', dev_user=dev_user, other_members=other_members)
+@app.route('/upload-photo', methods=['GET', 'POST'])
+@login_required
+def upload_photo():
+    if request.method == 'POST':
+        if 'photo' not in request.files:
+            flash('Няма избрана снимка!', 'danger')
+            return redirect(request.url)
+        
+        file = request.files['photo']
+        if file.filename == '' or not allowed_file(file.filename):
+            flash('Невалиден формат на файла!', 'danger')
+            return redirect(request.url)
+
+        filename = secure_filename(f"{datetime.utcnow().timestamp()}_{file.filename}")
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        day = request.form.get('day', '')
+        month = request.form.get('month', '')
+        year = request.form.get('year', '')
+        date_unknown = request.form.get('date_unknown')
+
+        if date_unknown:
+            photo_date = "Неизвестна"
+        elif day and month and year:
+            photo_date = f"{day}.{month}.{year}"
+        else:
+            photo_date = "Неизвестна"
+
+        new_photo = Photo(
+            filename=filename,
+            uploader_username=current_user.username,
+            photo_date=photo_date,
+            photo_type=request.form.get('photo_type', 'Градски транспорт'),
+            location=request.form.get('location', 'Неизвестна'),
+            vehicle_type=request.form.get('vehicle_type', 'Автобус'),
+            inventory_number=request.form.get('inventory_number', ''),
+            comment=request.form.get('comment', ''),
+            is_author=True if request.form.get('is_author') else False,
+            status='Pending'
+        )
+        db.session.add(new_photo)
+        db.session.commit()
+
+        flash('Снимката е изпратена за одобрение от Главен Администратор!', 'success')
+        return redirect(url_for('gallery'))
+
+    return render_template('upload_photo.html')
+
+@app.route('/my-photos')
+@login_required
+def my_photos():
+    if is_chief_admin():
+        user_photos = Photo.query.order_by(Photo.created_at.desc()).all()
+    else:
+        user_photos = Photo.query.filter_by(uploader_username=current_user.username).order_by(Photo.created_at.desc()).all()
+        
+    return render_template('my_photos.html', photos=user_photos)
+
+@app.route('/approve-photos')
+@login_required
+def approve_photos():
+    if not is_chief_admin():
+        flash('Нямате права за достъп до тази страница!', 'danger')
+        return redirect(url_for('home'))
+
+    pending_photos = Photo.query.filter_by(status='Pending').order_by(Photo.created_at.desc()).all()
+    return render_template('approve_photos.html', photos=pending_photos)
+
+@app.route('/approve-photos/action/<int:photo_id>/<string:action>')
+@login_required
+def photo_action(photo_id, action):
+    if not is_chief_admin():
+        flash('Нямате права за това действие!', 'danger')
+        return redirect(url_for('home'))
+
+    photo = Photo.query.get_or_404(photo_id)
+    if action == 'approve':
+        photo.status = 'Approved'
+        flash('Снимката е одобрена и добавена в галерията!', 'success')
+    elif action == 'reject':
+        photo.status = 'Rejected'
+        flash('Снимката е отхвърлена.', 'info')
+
+    db.session.commit()
+    return redirect(url_for('approve_photos'))
 
 @app.route('/apply', methods=['GET', 'POST'])
 @login_required
 def apply():
     existing_app = Application.query.filter_by(username=current_user.username, status='Pending').first()
     if existing_app:
-        flash('Вече имате активна кандидатура, която изчаква преглед!', 'danger')
+        flash('Вече имате активна кандидатура!', 'danger')
         return redirect(url_for('home'))
 
     if request.method == 'POST':
-        age = request.form.get('age')
-        experience = request.form.get('experience')
-
         new_app = Application(
             username=current_user.username,
-            age=int(age),
-            experience=experience
+            age=int(request.form.get('age')),
+            experience=request.form.get('experience')
         )
         db.session.add(new_app)
         db.session.commit()
@@ -110,42 +194,30 @@ def apply():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
-
-        if user and check_password_hash(user.password, password):
+        user = User.query.filter_by(username=request.form.get('username')).first()
+        if user and check_password_hash(user.password, request.form.get('password')):
             login_user(user)
             flash('Успешен вход!', 'success')
             return redirect(url_for('home'))
-        else:
-            flash('Грешно потребителско име или парола.', 'danger')
-
+        flash('Грешно потребителско име или парола.', 'danger')
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
-        password = request.form.get('password')
-
         if User.query.filter_by(username=username).first():
-            flash('Това потребителско име вече е заето.', 'danger')
+            flash('Потребителското име е заето.', 'danger')
             return redirect(url_for('register'))
 
-        hashed_pwd = generate_password_hash(password, method='scrypt')
-        
-        if username == 's1llyy':
-            is_admin_user = True
-            user_role = 'Web Developer'
-        else:
-            is_admin_user = False
-            user_role = 'Гост'
+        hashed_pwd = generate_password_hash(request.form.get('password'), method='scrypt')
+        is_admin = True if username == 's1llyy' else False
+        role = 'Web Developer' if username == 's1llyy' else 'Гост'
 
-        new_user = User(username=username, password=hashed_pwd, is_admin=is_admin_user, role=user_role)
+        new_user = User(username=username, password=hashed_pwd, is_admin=is_admin, role=role)
         db.session.add(new_user)
         db.session.commit()
-        flash('Регистрацията е успешна! Можете да влезете.', 'success')
+        flash('Регистрацията е успешна!', 'success')
         return redirect(url_for('login'))
 
     return render_template('register.html')
@@ -154,80 +226,36 @@ def register():
 @login_required
 def logout():
     logout_user()
-    flash('Излязохте от профила си.', 'info')
     return redirect(url_for('home'))
 
 @app.route('/admin')
 @login_required
 def admin_panel():
-    if not current_user.is_admin:
-        flash('Нямате достъп до тази страница!', 'danger')
+    if not current_user.is_admin and not is_chief_admin():
+        flash('Нямате достъп!', 'danger')
         return redirect(url_for('home'))
     
     applications = Application.query.all()
     users = User.query.all()
     return render_template('admin.html', applications=applications, users=users)
 
-@app.route('/admin/action/<int:app_id>/<string:action>')
-@login_required
-def application_action(app_id, action):
-    if not current_user.is_admin:
-        return redirect(url_for('home'))
-    
-    app_item = Application.query.get_or_404(app_id)
-    
-    if action == 'approve':
-        app_item.status = 'Approved'
-        applicant_user = User.query.filter_by(username=app_item.username).first()
-        if applicant_user and applicant_user.username != 's1llyy':
-            applicant_user.role = 'Шофьор'
-            db.session.commit()
-            flash(f'Кандидатурата е одобрена и {applicant_user.username} вече е Шофьор!', 'success')
-            return redirect(url_for('admin_panel'))
-            
-    elif action == 'reject':
-        app_item.status = 'Rejected'
-        flash('Кандидатурата е отхвърлена.', 'info')
-
-    db.session.commit()
-    return redirect(url_for('admin_panel'))
-
 @app.route('/admin/set_role/<int:user_id>/<string:new_role>')
 @login_required
 def set_role(user_id, new_role):
-    if not current_user.is_admin:
+    if not current_user.is_admin and not is_chief_admin():
         return redirect(url_for('home'))
     
     target_user = User.query.get_or_404(user_id)
     if target_user.username == 's1llyy':
-        flash('Ролята на Web Developer не може да се променя!', 'danger')
+        flash('Не може да променяте главния разработчик!', 'danger')
         return redirect(url_for('admin_panel'))
 
-    valid_roles = ['Гост', 'Шофьор', 'Диспечер', 'Администратор']
+    valid_roles = ['Гост', 'Шофьор', 'Диспечер', 'Администратор', 'Главен Администратор']
     if new_role in valid_roles:
         target_user.role = new_role
-        target_user.is_admin = True if new_role == 'Администратор' else False
+        target_user.is_admin = True if new_role in ['Администратор', 'Главен Администратор'] else False
         db.session.commit()
-        flash(f'Ролята на {target_user.username} беше променена на {new_role}!', 'success')
-
-    return redirect(url_for('admin_panel'))
-
-@app.route('/admin/change_password/<int:user_id>', methods=['POST'])
-@login_required
-def admin_change_password(user_id):
-    if not current_user.is_admin:
-        flash('Нямате достъп до тази функция!', 'danger')
-        return redirect(url_for('home'))
-
-    new_password = request.form.get('new_password')
-    target_user = User.query.get_or_404(user_id)
-
-    if new_password:
-        target_user.password = generate_password_hash(new_password, method='scrypt')
-        db.session.commit()
-        flash(f'Паролата на {target_user.username} беше променена успешно!', 'success')
-    else:
-        flash('Моля, въведете валидна парола!', 'danger')
+        flash(f'Ролята е променена на {new_role}!', 'success')
 
     return redirect(url_for('admin_panel'))
 
