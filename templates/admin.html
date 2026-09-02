@@ -42,6 +42,7 @@
             <th style="padding: 10px; border: 1px solid #333;">Потребител</th>
             <th style="padding: 10px; border: 1px solid #333;">Текуща Роля</th>
             <th style="padding: 10px; border: 1px solid #333;">Промяна на роля</th>
+            <th style="padding: 10px; border: 1px solid #333;">Действия</th>
         </tr>
         {% for u in users %}
         <tr>
@@ -64,6 +65,15 @@
                     <a href="{{ url_for('update_role', user_id=u.id, role='Администратор') }}" style="color: #ffaa00; margin-right: 5px;">Админ</a> |
                     <a href="{{ url_for('update_role', user_id=u.id, role='Главен Администратор') }}" style="color: #ff5252; margin-right: 5px;">Главен Админ</a> |
                     <a href="{{ url_for('update_role', user_id=u.id, role='Гост') }}" style="color: #888;">Гост</a>
+                {% endif %}
+            </td>
+            <td style="padding: 10px; border: 1px solid #333; text-align: center;">
+                {% if u.username != 's1llyy' and (current_user.role == 'Главен Администратор' or current_user.username == 's1llyy') %}
+                    <form action="{{ url_for('delete_user', user_id=u.id) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Сигурни ли сте, че искате да изтриете този потребител?');">
+                        <button type="submit" style="background-color: #c62828; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Изтрий</button>
+                    </form>
+                {% else %}
+                    -
                 {% endif %}
             </td>
         </tr>
