@@ -224,6 +224,26 @@ def reject_photo_action(photo_id):
     flash('Снимката е отхвърлена и изтрита.', 'info')
     return redirect(url_for('approve_photos'))
 
+@app.route('/delete-gallery-photo/<int:photo_id>', methods=['POST'], endpoint='delete_gallery_photo')
+@login_required
+def delete_gallery_photo(photo_id):
+    if not is_chief_admin():
+        flash('Нямате права да изтривате снимки от галерията!', 'danger')
+        return redirect(url_for('gallery'))
+        
+    photo = Photo.query.get_or_404(photo_id)
+    try:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    except Exception as e:
+        print(f"Error deleting file from disk: {e}")
+        
+    db.session.delete(photo)
+    db.session.commit()
+    flash('Снимката беше изтрита успешно от галерията.', 'success')
+    return redirect(url_for('gallery'))
+
 @app.route('/admin', methods=['GET', 'POST'], endpoint='admin')
 @login_required
 def admin():
@@ -250,6 +270,25 @@ def update_role(user_id, role):
         user.is_admin = (role in ['Администратор', 'Главен Администратор'])
         db.session.commit()
         flash(f'Ролята на {user.username} беше променена на {role}.', 'success')
+    return redirect(url_for('admin'))
+
+@app.route('/change-password/<int:user_id>', methods=['POST'], endpoint='change_password')
+@login_required
+def change_password(user_id):
+    if not is_chief_admin():
+        flash('Нямате права да променяте пароли!', 'danger')
+        return redirect(url_for('admin'))
+    
+    user = User.query.get_or_404(user_id)
+    new_password = request.form.get('new_password')
+    
+    if not new_password or len(new_password.strip()) < 3:
+        flash('Паролата трябва да съдържа поне 3 символа!', 'danger')
+        return redirect(url_for('admin'))
+        
+    user.password = generate_password_hash(new_password)
+    db.session.commit()
+    flash(f'Паролата на потребител {user.username} беше променена успешно.', 'success')
     return redirect(url_for('admin'))
 
 @app.route('/delete-user/<int:user_id>', methods=['POST'], endpoint='delete_user')
