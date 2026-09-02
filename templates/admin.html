@@ -59,10 +59,11 @@
                 {% if u.username == 's1llyy' %}
                     -
                 {% else %}
-                    <a href="{{ url_for('set_role', user_id=u.id, new_role='Шофьор') }}" style="color: #00e676; margin-right: 5px;">Шофьор</a> |
-                    <a href="{{ url_for('set_role', user_id=u.id, new_role='Диспечер') }}" style="color: #00aaff; margin-right: 5px;">Диспечер</a> |
-                    <a href="{{ url_for('set_role', user_id=u.id, new_role='Администратор') }}" style="color: #ffaa00; margin-right: 5px;">Админ</a> |
-                    <a href="{{ url_for('set_role', user_id=u.id, new_role='Гост') }}" style="color: #888;">Гост</a>
+                    <a href="{{ url_for('update_role', user_id=u.id, role='Шофьор') }}" style="color: #00e676; margin-right: 5px;">Шофьор</a> |
+                    <a href="{{ url_for('update_role', user_id=u.id, role='Диспечер') }}" style="color: #00aaff; margin-right: 5px;">Диспечер</a> |
+                    <a href="{{ url_for('update_role', user_id=u.id, role='Администратор') }}" style="color: #ffaa00; margin-right: 5px;">Админ</a> |
+                    <a href="{{ url_for('update_role', user_id=u.id, role='Главен Администратор') }}" style="color: #ff5252; margin-right: 5px;">Главен Админ</a> |
+                    <a href="{{ url_for('update_role', user_id=u.id, role='Гост') }}" style="color: #888;">Гост</a>
                 {% endif %}
             </td>
         </tr>
