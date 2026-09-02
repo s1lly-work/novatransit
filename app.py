@@ -100,7 +100,6 @@ def gallery():
     approved_photos = Photo.query.filter_by(status='Approved').order_by(Photo.created_at.desc()).all()
     return render_template('gallery.html', photos=approved_photos)
 
-# Линкът който покрива и двете възможности за имейндпойнт (upload_photo и upload_photos)
 @app.route('/upload-photos', methods=['GET', 'POST'])
 @app.route('/upload-photo', methods=['GET', 'POST'])
 @login_required
@@ -119,7 +118,6 @@ def upload_photo():
             filename = secure_filename(f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}")
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             
-            # Събиране на данните от формата
             day = request.form.get('day', '').strip()
             month = request.form.get('month', '').strip()
             year = request.form.get('year', '').strip()
