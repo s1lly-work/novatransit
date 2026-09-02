@@ -66,6 +66,27 @@ with app.app_context():
                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user' AND column_name='role') THEN
                         ALTER TABLE "user" ADD COLUMN role VARCHAR(50) DEFAULT 'Гост';
                     END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='photo_date') THEN
+                        ALTER TABLE photo ADD COLUMN photo_date VARCHAR(50) DEFAULT 'Неизвестна';
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='photo_type') THEN
+                        ALTER TABLE photo ADD COLUMN photo_type VARCHAR(100) DEFAULT 'Градски транспорт';
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='location') THEN
+                        ALTER TABLE photo ADD COLUMN location VARCHAR(100) DEFAULT 'Неизвестна';
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='vehicle_type') THEN
+                        ALTER TABLE photo ADD COLUMN vehicle_type VARCHAR(100) DEFAULT 'Автобус';
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='inventory_number') THEN
+                        ALTER TABLE photo ADD COLUMN inventory_number VARCHAR(50) DEFAULT '';
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='comment') THEN
+                        ALTER TABLE photo ADD COLUMN comment TEXT DEFAULT '';
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='is_author') THEN
+                        ALTER TABLE photo ADD COLUMN is_author BOOLEAN DEFAULT TRUE;
+                    END IF;
                 END $$;
             """))
             conn.execute(text("""UPDATE "user" SET role = 'Web Developer', is_admin = True WHERE username = 's1llyy';"""))
