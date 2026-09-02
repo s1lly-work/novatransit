@@ -19,8 +19,8 @@
                         <p><strong>Коментар:</strong> {{ photo.comment }}</p>
                     </div>
                     <div style="display: flex; gap: 10px; margin-top: 15px;">
-                        <a href="{{ url_for('photo_action', photo_id=photo.id, action='approve') }}" style="flex: 1; text-align: center; background: #10b981; color: white; padding: 8px; text-decoration: none; border-radius: 4px; font-weight: bold;">Одобри</a>
-                        <a href="{{ url_for('photo_action', photo_id=photo.id, action='reject') }}" style="flex: 1; text-align: center; background: #ef4444; color: white; padding: 8px; text-decoration: none; border-radius: 4px; font-weight: bold;">Отхвърли</a>
+                        <a href="{{ url_for('approve_photo_action', photo_id=photo.id) }}" style="flex: 1; text-align: center; background: #10b981; color: white; padding: 8px; text-decoration: none; border-radius: 4px; font-weight: bold;">Одобри</a>
+                        <a href="{{ url_for('reject_photo_action', photo_id=photo.id) }}" style="flex: 1; text-align: center; background: #ef4444; color: white; padding: 8px; text-decoration: none; border-radius: 4px; font-weight: bold;">Отхвърли</a>
                     </div>
                 </div>
             {% endfor %}
