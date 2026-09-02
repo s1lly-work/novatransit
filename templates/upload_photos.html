@@ -8,7 +8,7 @@
         <div style="width: 320px; background: #111214; padding: 15px; border-radius: 6px; font-size: 14px;">
             <div style="margin-bottom: 15px;">
                 <label>Избери файл:</label>
-                <input type="file" name="photo" accept="image/*" required style="width: 100%; margin-top: 5px; color: #ccc;">
+                <input type="file" name="photo" id="photoInput" accept="image/*" required style="width: 100%; margin-top: 5px; color: #ccc;" onchange="previewImage(event)">
             </div>
 
             <div style="margin-bottom: 15px;">
@@ -60,9 +60,29 @@
             <button type="submit" style="width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">Изпрати за одобрение</button>
         </div>
 
-        <div style="flex-grow: 1; border: 2px dashed #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: #111214;">
-            <p style="color: #888;">Попълнете данните вляво и изберете файл за качване.</p>
+        <!-- Дясна колона с динамичен Preview -->
+        <div style="flex-grow: 1; border: 2px dashed #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: #111214; padding: 20px; text-align: center; overflow: hidden;">
+            <p id="placeholderText" style="color: #888;">Попълнете данните вляво и изберете файл за качване.</p>
+            <img id="imagePreview" src="#" alt="Preview" style="display: none; max-width: 100%; max-height: 450px; border-radius: 6px; object-fit: contain;">
         </div>
     </form>
 </div>
+
+<script>
+function previewImage(event) {
+    const input = event.target;
+    const placeholderText = document.getElementById('placeholderText');
+    const imagePreview = document.getElementById('imagePreview');
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imagePreview.src = e.target.result;
+            imagePreview.style.display = 'block';
+            placeholderText.style.display = 'none';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
 {% endblock %}
