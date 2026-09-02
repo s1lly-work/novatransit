@@ -130,10 +130,10 @@ def apply():
         
     return render_template('apply.html')
 
-@app.route('/upload-photos', methods=['GET', 'POST'])
-@app.route('/upload-photo', methods=['GET', 'POST'])
+@app.route('/upload-photos', methods=['GET', 'POST'], endpoint='upload_photos')
+@app.route('/upload-photo', methods=['GET', 'POST'], endpoint='upload_photo')
 @login_required
-def upload_photo():
+def upload_photos():
     if request.method == 'POST':
         if 'photo' not in request.files:
             flash('Няма избрана снимка!', 'danger')
@@ -187,13 +187,13 @@ def upload_photo():
             
     return render_template('upload_photos.html')
 
-@app.route('/my-photos')
+@app.route('/my-photos', endpoint='my_photos')
 @login_required
 def my_photos():
     photos = Photo.query.filter_by(uploader_username=current_user.username).order_by(Photo.created_at.desc()).all()
     return render_template('my_photos.html', photos=photos)
 
-@app.route('/approve-photos')
+@app.route('/approve-photos', endpoint='approve_photos')
 @login_required
 def approve_photos():
     if not is_chief_admin():
@@ -202,7 +202,7 @@ def approve_photos():
     pending_photos = Photo.query.filter_by(status='Pending').all()
     return render_template('approve_photos.html', photos=pending_photos)
 
-@app.route('/approve/<int:photo_id>')
+@app.route('/approve/<int:photo_id>', endpoint='approve_photo_action')
 @login_required
 def approve_photo_action(photo_id):
     if not is_chief_admin():
@@ -213,7 +213,7 @@ def approve_photo_action(photo_id):
     flash('Снимката е одобрена!', 'success')
     return redirect(url_for('approve_photos'))
 
-@app.route('/reject/<int:photo_id>')
+@app.route('/reject/<int:photo_id>', endpoint='reject_photo_action')
 @login_required
 def reject_photo_action(photo_id):
     if not is_chief_admin():
@@ -224,7 +224,7 @@ def reject_photo_action(photo_id):
     flash('Снимката е отхвърлена и изтрита.', 'info')
     return redirect(url_for('approve_photos'))
 
-@app.route('/admin', methods=['GET', 'POST'])
+@app.route('/admin', methods=['GET', 'POST'], endpoint='admin')
 @login_required
 def admin():
     if not is_chief_admin():
@@ -234,7 +234,7 @@ def admin():
     users = User.query.all()
     return render_template('admin.html', applications=applications, users=users)
 
-@app.route('/update-role/<int:user_id>/<role>')
+@app.route('/update-role/<int:user_id>/<role>', endpoint='update_role')
 @login_required
 def update_role(user_id, role):
     if not is_chief_admin():
@@ -252,7 +252,7 @@ def update_role(user_id, role):
         flash(f'Ролята на {user.username} беше променена на {role}.', 'success')
     return redirect(url_for('admin'))
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'], endpoint='login')
 def login():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -266,7 +266,7 @@ def login():
             flash('Грешно потребителско име или парола!', 'danger')
     return render_template('login.html')
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'], endpoint='register')
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -285,7 +285,7 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html')
 
-@app.route('/logout')
+@app.route('/logout', endpoint='logout')
 @login_required
 def logout():
     logout_user()
