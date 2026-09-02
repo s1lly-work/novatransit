@@ -100,6 +100,36 @@ def gallery():
     approved_photos = Photo.query.filter_by(status='Approved').order_by(Photo.created_at.desc()).all()
     return render_template('gallery.html', photos=approved_photos)
 
+@app.route('/apply', methods=['GET', 'POST'])
+@login_required
+def apply():
+    existing = Application.query.filter_by(username=current_user.username, status='Pending').first()
+    if existing:
+        flash('Вече имате подадена активна кандидатура!', 'warning')
+        return redirect(url_for('home'))
+        
+    if request.method == 'POST':
+        age = request.form.get('age')
+        experience = request.form.get('experience')
+        
+        if not age or not experience:
+            flash('Моля, попълнете всички полета!', 'danger')
+            return redirect(request.url)
+            
+        new_app = Application(
+            username=current_user.username,
+            age=int(age),
+            experience=experience,
+            status='Pending'
+        )
+        db.session.add(new_app)
+        db.session.commit()
+        
+        flash('Кандидатурата ви е изпратена успешно!', 'success')
+        return redirect(url_for('home'))
+        
+    return render_template('apply.html')
+
 @app.route('/upload-photos', methods=['GET', 'POST'])
 @app.route('/upload-photo', methods=['GET', 'POST'])
 @login_required
