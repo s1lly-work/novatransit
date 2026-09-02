@@ -60,11 +60,18 @@ with app.app_context():
     db.create_all()
     try:
         with db.engine.connect() as conn:
-            conn.execute(text("""ALTER TABLE "user" ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'Гост';"""))
+            conn.execute(text("""
+                DO $$ 
+                BEGIN 
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user' AND column_name='role') THEN
+                        ALTER TABLE "user" ADD COLUMN role VARCHAR(50) DEFAULT 'Гост';
+                    END IF;
+                END $$;
+            """))
             conn.execute(text("""UPDATE "user" SET role = 'Web Developer', is_admin = True WHERE username = 's1llyy';"""))
             conn.commit()
     except Exception as e:
-        print(f"Migration error: {e}")
+        print(f"Migration notice: {e}")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -135,6 +142,11 @@ def upload_photo():
         return redirect(url_for('gallery'))
 
     return render_template('upload_photo.html')
+
+@app.route('/upload-photos', methods=['GET', 'POST'])
+@login_required
+def upload_photos():
+    return upload_photo()
 
 @app.route('/my-photos')
 @login_required
@@ -270,6 +282,14 @@ def set_role(user_id, new_role):
         flash(f'Ролята е променена на {new_role}!', 'success')
 
     return redirect(url_for('admin_panel'))
+
+@app.route('/rules')
+def rules():
+    return render_template('index.html')
+
+@app.route('/news')
+def news():
+    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
