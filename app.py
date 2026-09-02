@@ -281,11 +281,15 @@ def admin_panel():
     return render_template('admin.html', applications=applications, users=users)
 
 @app.route('/admin/set_role/<int:user_id>/<string:new_role>')
+@app.route('/admin/set_role/<int:user_id>/<string:role>')
+@app.route('/set_role/<int:user_id>/<string:new_role>')
+@app.route('/set_role/<int:user_id>/<string:role>')
 @login_required
-def set_role(user_id, new_role):
+def set_role(user_id, new_role=None, role=None):
     if not current_user.is_admin and not is_chief_admin():
         return redirect(url_for('home'))
     
+    target_role = new_role or role
     target_user = db.session.get(User, user_id)
     if not target_user:
         flash('Потребителят не е намерен!', 'danger')
@@ -296,11 +300,11 @@ def set_role(user_id, new_role):
         return redirect(url_for('admin_panel'))
 
     valid_roles = ['Гост', 'Шофьор', 'Диспечер', 'Администратор', 'Главен Администратор']
-    if new_role in valid_roles:
-        target_user.role = new_role
-        target_user.is_admin = True if new_role in ['Администратор', 'Главен Администратор'] else False
+    if target_role in valid_roles:
+        target_user.role = target_role
+        target_user.is_admin = True if target_role in ['Администратор', 'Главен Администратор'] else False
         db.session.commit()
-        flash(f'Ролята е променена на {new_role}!', 'success')
+        flash(f'Ролята е променена на {target_role}!', 'success')
 
     return redirect(url_for('admin_panel'))
 
