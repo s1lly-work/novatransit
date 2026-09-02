@@ -23,7 +23,7 @@
                 {% endif %}
                 
                 {% if current_user.is_admin or current_user.username == 's1llyy' %}
-                    <a href="{{ url_for('admin_panel') }}" style="color: #ff4d4d; font-weight: bold;">Админ Панел</a>
+                    <a href="{{ url_for('admin') }}" style="color: #ff4d4d; font-weight: bold;">Админ Панел</a>
                 {% endif %}
             {% endif %}
         </div>
