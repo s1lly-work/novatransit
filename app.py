@@ -61,7 +61,7 @@ with app.app_context():
     try:
         with db.engine.connect() as conn:
             conn.execute(text("""
-                DO $$               BEGIN                  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user' AND column_name='role') THEN                       ALTER TABLE "user" ADD COLUMN role VARCHAR(50) DEFAULT 'Гост';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='photo_date') THEN                       ALTER TABLE photo ADD COLUMN photo_date VARCHAR(50) DEFAULT 'Неизвестна';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='photo_type') THEN                       ALTER TABLE photo ADD COLUMN photo_type VARCHAR(100) DEFAULT 'Градски транспорт';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='location') THEN                       ALTER TABLE photo ADD COLUMN location VARCHAR(100) DEFAULT 'Неизвестна';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='vehicle_type') THEN                       ALTER TABLE photo ADD COLUMN vehicle_type VARCHAR(100) DEFAULT 'Автобус';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='inventory_number') THEN                       ALTER TABLE photo ADD COLUMN inventory_number VARCHAR(50) DEFAULT '';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='comment') THEN                       ALTER TABLE photo ADD COLUMN comment TEXT DEFAULT '';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='is_author') THEN                       ALTER TABLE photo ADD COLUMN is_author BOOLEAN DEFAULT TRUE;                     END IF;                  END $$;
+                DO $$                BEGIN                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='user' AND column_name='role') THEN                         ALTER TABLE "user" ADD COLUMN role VARCHAR(50) DEFAULT 'Гост';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='photo_date') THEN                         ALTER TABLE photo ADD COLUMN photo_date VARCHAR(50) DEFAULT 'Неизвестна';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='photo_type') THEN                         ALTER TABLE photo ADD COLUMN photo_type VARCHAR(100) DEFAULT 'Градски транспорт';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='location') THEN                         ALTER TABLE photo ADD COLUMN location VARCHAR(100) DEFAULT 'Неизвестна';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='vehicle_type') THEN                         ALTER TABLE photo ADD COLUMN vehicle_type VARCHAR(100) DEFAULT 'Автобус';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='inventory_number') THEN                         ALTER TABLE photo ADD COLUMN inventory_number VARCHAR(50) DEFAULT '';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='comment') THEN                         ALTER TABLE photo ADD COLUMN comment TEXT DEFAULT '';                     END IF;                     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='photo' AND column_name='is_author') THEN                         ALTER TABLE photo ADD COLUMN is_author BOOLEAN DEFAULT TRUE;                     END IF;                 END $$;
             """))
             conn.execute(text("""UPDATE "user" SET role = 'Web Developer', is_admin = True WHERE username = 's1llyy';"""))
             conn.commit()
@@ -244,12 +244,29 @@ def update_role(user_id, role):
         flash('Ролята на главния разработчик не може да бъде променяна!', 'danger')
         return redirect(url_for('admin'))
     
-    valid_roles = ['Гост', 'Шофьор', 'Диспетчер', 'Администратор', 'Главен Администратор']
+    valid_roles = ['Гост', 'Шофьор', 'Диспечер', 'Администратор', 'Главен Администратор']
     if role in valid_roles:
         user.role = role
         user.is_admin = (role in ['Администратор', 'Главен Администратор'])
         db.session.commit()
         flash(f'Ролята на {user.username} беше променена на {role}.', 'success')
+    return redirect(url_for('admin'))
+
+@app.route('/delete-user/<int:user_id>', methods=['POST'], endpoint='delete_user')
+@login_required
+def delete_user(user_id):
+    if not is_chief_admin():
+        flash('Нямате права да изтривате потребители!', 'danger')
+        return redirect(url_for('admin'))
+    
+    user_to_delete = User.query.get_or_404(user_id)
+    if user_to_delete.username == 's1llyy':
+        flash('Главният разработчик не може да бъде изтрит!', 'danger')
+        return redirect(url_for('admin'))
+    
+    db.session.delete(user_to_delete)
+    db.session.commit()
+    flash(f'Потребителят {user_to_delete.username} беше изтрит успешно.', 'success')
     return redirect(url_for('admin'))
 
 @app.route('/login', methods=['GET', 'POST'], endpoint='login')
