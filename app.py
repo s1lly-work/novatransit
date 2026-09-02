@@ -244,10 +244,10 @@ def update_role(user_id, role):
         flash('Ролята на главния разработчик не може да бъде променяна!', 'danger')
         return redirect(url_for('admin'))
     
-    valid_roles = ['Гост', 'Шофьор', 'Диспетчер', 'Администратор']
+    valid_roles = ['Гост', 'Шофьор', 'Диспетчер', 'Администратор', 'Главен Администратор']
     if role in valid_roles:
         user.role = role
-        user.is_admin = (role == 'Администратор')
+        user.is_admin = (role in ['Администратор', 'Главен Администратор'])
         db.session.commit()
         flash(f'Ролята на {user.username} беше променена на {role}.', 'success')
     return redirect(url_for('admin'))
