@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div style="max-width: 950px; margin: 40px auto; padding: 20px;">
+<div style="max-width: 1150px; margin: 40px auto; padding: 20px;">
     <h2>Административен панел</h2>
 
     <h3 style="margin-top: 30px;">Кандидатури</h3>
@@ -42,6 +42,7 @@
             <th style="padding: 10px; border: 1px solid #333;">Потребител</th>
             <th style="padding: 10px; border: 1px solid #333;">Текуща Роля</th>
             <th style="padding: 10px; border: 1px solid #333;">Промяна на роля</th>
+            <th style="padding: 10px; border: 1px solid #333;">Нова парола</th>
             <th style="padding: 10px; border: 1px solid #333;">Действия</th>
         </tr>
         {% for u in users %}
@@ -60,11 +61,21 @@
                 {% if u.username == 's1llyy' %}
                     -
                 {% else %}
-                    <a href="{{ url_for('update_role', user_id=u.id, role='Шофьор') }}" style="color: #00e676; margin-right: 5px;">Шофьор</a> |
-                    <a href="{{ url_for('update_role', user_id=u.id, role='Диспечер') }}" style="color: #00aaff; margin-right: 5px;">Диспечер</a> |
-                    <a href="{{ url_for('update_role', user_id=u.id, role='Администратор') }}" style="color: #ffaa00; margin-right: 5px;">Админ</a> |
-                    <a href="{{ url_for('update_role', user_id=u.id, role='Главен Администратор') }}" style="color: #ff5252; margin-right: 5px;">Главен Админ</a> |
+                    <a href="{{ url_for('update_role', user_id=u.id, role='Шофьор') }}" style="color: #00e676; margin-right: 3px;">Шофьор</a> |
+                    <a href="{{ url_for('update_role', user_id=u.id, role='Диспечер') }}" style="color: #00aaff; margin-right: 3px;">Диспечер</a> |
+                    <a href="{{ url_for('update_role', user_id=u.id, role='Администратор') }}" style="color: #ffaa00; margin-right: 3px;">Админ</a> |
+                    <a href="{{ url_for('update_role', user_id=u.id, role='Главен Администратор') }}" style="color: #ff5252; margin-right: 3px;">Гл. Админ</a> |
                     <a href="{{ url_for('update_role', user_id=u.id, role='Гост') }}" style="color: #888;">Гост</a>
+                {% endif %}
+            </td>
+            <td style="padding: 10px; border: 1px solid #333;">
+                {% if u.username != 's1llyy' and (current_user.role == 'Главен Администратор' or current_user.username == 's1llyy') %}
+                    <form action="{{ url_for('change_password', user_id=u.id) }}" method="POST" style="display: flex; gap: 5px; margin: 0;">
+                        <input type="text" name="new_password" placeholder="Нова парола" required style="padding: 4px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; width: 110px;">
+                        <button type="submit" style="background-color: #00838f; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Смени</button>
+                    </form>
+                {% else %}
+                    -
                 {% endif %}
             </td>
             <td style="padding: 10px; border: 1px solid #333; text-align: center;">
