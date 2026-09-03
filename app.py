@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -10,6 +10,7 @@ import cloudinary.uploader
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nova_transit_secret_key'
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)
 
 cloudinary.config(
     cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'mb42ggqm'),
@@ -340,9 +341,10 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        remember_me = True if request.form.get('remember') else False
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
-            login_user(user)
+            login_user(user, remember=remember_me)
             flash('Успешен вход!', 'success')
             return redirect(url_for('home'))
         else:
