@@ -12,9 +12,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nova_transit_secret_key'
 
 cloudinary.config(
-    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'dx6g5b19w'),
-    api_key=os.environ.get('CLOUDINARY_API_KEY', '784742618991483'),
-    api_secret=os.environ.get('CLOUDINARY_API_SECRET', 'kYfI1_432Y4W2mO5M3b50c3S55s'),
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'mb42ggqm'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY', '758254562638348'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET', 'laSR10tp8V-ssjoQU2Hcu7C3yLo'),
     secure=True
 )
 
