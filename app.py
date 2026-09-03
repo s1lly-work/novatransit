@@ -4,16 +4,21 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from sqlalchemy import text
+import cloudinary
+import cloudinary.uploader
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nova_transit_secret_key'
 
-UPLOAD_FOLDER = os.path.join(app.root_path, 'static', 'uploads')
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'dx6g5b19w'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY', '784742618991483'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET', 'kYfI1_432Y4W2mO5M3b50c3S55s'),
+    secure=True
+)
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
 if db_url.startswith("postgres://"):
@@ -44,7 +49,7 @@ class Application(db.Model):
 
 class Photo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(255), nullable=False)
+    filename = db.Column(db.String(500), nullable=False)
     uploader_username = db.Column(db.String(50), nullable=False)
     photo_date = db.Column(db.String(50), default='Неизвестна')
     photo_type = db.Column(db.String(100), default='Градски транспорт')
@@ -170,8 +175,12 @@ def upload_photos():
             return redirect(request.url)
             
         if file and allowed_file(file.filename):
-            filename = secure_filename(f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}")
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            try:
+                upload_result = cloudinary.uploader.upload(file)
+                filename = upload_result.get('secure_url')
+            except Exception as e:
+                flash(f'Грешка при качване в облака: {e}', 'danger')
+                return redirect(request.url)
             
             day = request.form.get('day', '').strip()
             month = request.form.get('month', '').strip()
@@ -257,13 +266,6 @@ def delete_gallery_photo(photo_id):
         return redirect(url_for('gallery'))
         
     photo = Photo.query.get_or_404(photo_id)
-    try:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-    except Exception as e:
-        print(f"Error deleting file from disk: {e}")
-        
     db.session.delete(photo)
     db.session.commit()
     flash('Снимката беше изтрита успешно от галерията.', 'success')
