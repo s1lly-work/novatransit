@@ -9,7 +9,9 @@
 <body>
     <nav style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #18191c; border-bottom: 1px solid #2a2b2e;">
         <div style="display: flex; align-items: center; gap: 15px;">
-            <a href="{{ url_for('home') }}" style="color: #00e676; font-weight: bold; font-size: 18px; text-decoration: none;">Бобката Трансит</a>
+            <a href="{{ url_for('home') }}" style="display: flex; align-items: center; text-decoration: none;">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Bobkata Transit Logo" style="height: 35px; width: auto; border-radius: 4px;">
+            </a>
             <a href="{{ url_for('home') }}">Начало</a>
             <a href="{{ url_for('gallery') }}">Галерия</a>
             <a href="{{ url_for('team') }}">Екип</a>
