@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav>
-        <div>
+    <nav style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #18191c; border-bottom: 1px solid #2a2b2e;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <a href="{{ url_for('home') }}" style="color: #00e676; font-weight: bold; font-size: 18px; text-decoration: none;">Бобката Трансит</a>
             <a href="{{ url_for('home') }}">Начало</a>
             <a href="{{ url_for('gallery') }}">Галерия</a>
             <a href="{{ url_for('team') }}">Екип</a>
@@ -29,7 +30,7 @@
         </div>
         <div>
             {% if current_user.is_authenticated %}
-                <span>
+                <span style="margin-right: 15px;">
                     {{ current_user.username }}
                     {% if current_user.username == 's1llyy' or current_user.role == 'Web Developer' %}
                         <span class="dev-tag" style="color: #ff3333; font-weight: bold;">Web Developer</span>
@@ -45,7 +46,7 @@
                 </span>
                 <a href="{{ url_for('logout') }}">Изход</a>
             {% else %}
-                <a href="{{ url_for('login') }}">Вход</a>
+                <a href="{{ url_for('login') }}" style="margin-right: 10px;">Вход</a>
                 <a href="{{ url_for('register') }}">Регистрация</a>
             {% endif %}
         </div>
